@@ -8,7 +8,14 @@ using UserWcfServiceLib;
 
 namespace UserWebApp.Controllers
 {
-    public class WcfProxy<T>
+    public interface IWcfProxy<T>
+    {
+        void Execute(Action<T> action);
+
+        TResult Execute<TResult>(Func<T, TResult> function);
+    }
+
+    public class WcfProxy<T> : IWcfProxy<T>
     {
         public ChannelFactory<T> Channel { get; set; }
 
@@ -50,19 +57,19 @@ namespace UserWebApp.Controllers
             Channel = new ChannelFactory<T>("*");
         }
 
-        public T CreateChannel()
+        private T CreateChannel()
         {
             return Channel.CreateChannel();
         }
 
         public void Execute(Action<T> action)
         {
-            T proxy = CreateChannel();
-            var communicationObject = (ICommunicationObject)proxy;
+            T serviceProxy = CreateChannel();
+            var communicationObject = (ICommunicationObject)serviceProxy;
 
             try
             {
-                action(proxy);
+                action(serviceProxy);
 
                 communicationObject.Close();
             }
@@ -74,12 +81,12 @@ namespace UserWebApp.Controllers
 
         public TResult Execute<TResult>(Func<T, TResult> function)
         {
-            T proxy = CreateChannel();
-            var communicationObject = (ICommunicationObject)proxy;
+            T serviceProxy = CreateChannel();
+            var communicationObject = (ICommunicationObject)serviceProxy;
 
             try
             {
-                var result = function(proxy);
+                var result = function(serviceProxy);
 
                 communicationObject.Close();
 
@@ -92,17 +99,33 @@ namespace UserWebApp.Controllers
         }
     }
 
-    public class UserServiceProxy : IUserService
+    public class UserServiceWcfProxy : IUserService
     {
+        public UserServiceWcfProxy() : this(new WcfProxy<IUserService>())
+        {
+
+        }
+
+        public UserServiceWcfProxy(IWcfProxy<IUserService> wcfProxy)
+        {
+            WcfProxy = wcfProxy ?? throw new ArgumentNullException(nameof(wcfProxy));
+        }
+
+        public IWcfProxy<IUserService> WcfProxy { get; }
+
         public int GetUserIdByName(string userName)
         {
-            var userServiceProxy = new WcfProxy<IUserService>();
+            //var userServiceProxy = new WcfProxy<IUserService>();
 
-            //// for a void method
-            //WcfProxy.Execute(prxy => prxy.Method());
+            ////// for a void method
+            ////WcfProxy.Execute(prxy => prxy.Method());
 
-            // for non void method.
-            var result = userServiceProxy.Execute(prxy => prxy.GetUserIdByName(userName));
+            //// for non void method.
+            //var result = userServiceProxy.Execute(prxy => prxy.GetUserIdByName(userName));
+
+            //return result;
+
+            var result = WcfProxy.Execute(service => service.GetUserIdByName(userName));
 
             return result;
         }
@@ -160,35 +183,35 @@ namespace UserWebApp.Controllers
         //    }
         //}
 
-        private IUserService GetUserServiceChannel()
-        {
-            //var binding = new BasicHttpsBinding();
-            var binding = new BasicHttpBinding();
+        //private IUserService GetUserServiceChannel()
+        //{
+        //    //var binding = new BasicHttpsBinding();
+        //    var binding = new BasicHttpBinding();
 
-            var endpointAddress = new EndpointAddress("http://localhost:58314/UserService.svc");
-            var channelFactory = new ChannelFactory<IUserService>(binding, endpointAddress);
+        //    var endpointAddress = new EndpointAddress("http://localhost:58314/UserService.svc");
+        //    var channelFactory = new ChannelFactory<IUserService>(binding, endpointAddress);
 
-            IUserService channel = channelFactory.CreateChannel();
+        //    IUserService channel = channelFactory.CreateChannel();
 
-            return channel;
-        }
+        //    return channel;
+        //}
 
-        private ChannelFactory<IUserService> GetUserServiceChannelFactory()
-        {
-            //var binding = new BasicHttpsBinding();
-            var binding = new BasicHttpBinding();
-            var endpointAddress = new EndpointAddress("http://localhost:58314/UserService.svc");
-            var channelFactory = new ChannelFactory<IUserService>(binding, endpointAddress);
+        //private ChannelFactory<IUserService> GetUserServiceChannelFactory()
+        //{
+        //    //var binding = new BasicHttpsBinding();
+        //    var binding = new BasicHttpBinding();
+        //    var endpointAddress = new EndpointAddress("http://localhost:58314/UserService.svc");
+        //    var channelFactory = new ChannelFactory<IUserService>(binding, endpointAddress);
 
-            return channelFactory;
-        }
+        //    return channelFactory;
+        //}
     }
 
     public class HomeController : Controller
     {
         public IUserService UserService { get; }
 
-        public HomeController() : this(new UserServiceProxy())
+        public HomeController() : this(new UserServiceWcfProxy())
         {
         }
 
