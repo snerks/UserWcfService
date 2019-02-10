@@ -34,14 +34,14 @@ namespace UserWebApp.Controllers
 
             //Channel = new ChannelFactory<T>("BasicHttpBinding_IUserService");
 
-            // The optional name attribute uniquely identifies an endpoint for a given contract. 
+            // The optional "endpoint.name" attribute uniquely identifies an endpoint for a given contract. 
             // It is used by the ChannelFactory<TChannel> or by the ClientBase<TChannel> to specify 
             // which endpoint in the client configuration is being targeted and must be loaded when 
             // a channel is created to service. 
             //
             // A wildcard endpoint configuration name "*" is available and indicates to the 
             // ApplyConfiguration method that it should load any endpoint configuration in the file, 
-            // provided there is precisely one available, and otherwise throws an exception.
+            // provided there is precisely one available (for the "T" contract Type), and otherwise throws an exception.
             //
             // If this attribute is omitted, the corresponding endpoint is used as the default endpoint 
             // associated with the specified contract type. 
