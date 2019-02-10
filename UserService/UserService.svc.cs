@@ -12,9 +12,14 @@ namespace UserService
     // NOTE: In order to launch WCF Test Client for testing this service, please select UserService.svc or UserService.svc.cs at the Solution Explorer and start debugging.
     public class UserService : IUserService
     {
-        public int GetUserIdByName(string userName)
+        public int? GetUserIdByName(string userName)
         {
-            return 22;
+            if (userName == @"DOMAIN\j.smith")
+            {
+                return 22;
+            }
+
+            return null;
         }
     }
 }

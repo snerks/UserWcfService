@@ -11,6 +11,6 @@ namespace UserWcfServiceLib
     public interface IUserService
     {
         [OperationContract]
-        int GetUserIdByName(string userName);
+        int? GetUserIdByName(string userName);
     }
 }

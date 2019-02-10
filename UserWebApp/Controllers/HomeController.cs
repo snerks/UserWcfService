@@ -10,9 +10,9 @@ namespace UserWebApp.Controllers
 {
     public interface IWcfProxy<T>
     {
-        void Execute(Action<T> action);
+        void Execute(Action<T> serviceAction);
 
-        TResult Execute<TResult>(Func<T, TResult> function);
+        TResult Execute<TResult>(Func<T, TResult> serviceFunction);
     }
 
     public class WcfProxy<T> : IWcfProxy<T>
@@ -62,14 +62,14 @@ namespace UserWebApp.Controllers
             return Channel.CreateChannel();
         }
 
-        public void Execute(Action<T> action)
+        public void Execute(Action<T> serviceAction)
         {
             T serviceProxy = CreateChannel();
             var communicationObject = (ICommunicationObject)serviceProxy;
 
             try
             {
-                action(serviceProxy);
+                serviceAction(serviceProxy);
 
                 communicationObject.Close();
             }
@@ -79,14 +79,14 @@ namespace UserWebApp.Controllers
             }
         }
 
-        public TResult Execute<TResult>(Func<T, TResult> function)
+        public TResult Execute<TResult>(Func<T, TResult> serviceFunction)
         {
             T serviceProxy = CreateChannel();
             var communicationObject = (ICommunicationObject)serviceProxy;
 
             try
             {
-                var result = function(serviceProxy);
+                var result = serviceFunction(serviceProxy);
 
                 communicationObject.Close();
 
@@ -113,7 +113,7 @@ namespace UserWebApp.Controllers
 
         public IWcfProxy<IUserService> WcfProxy { get; }
 
-        public int GetUserIdByName(string userName)
+        public int? GetUserIdByName(string userName)
         {
             //var userServiceProxy = new WcfProxy<IUserService>();
 
@@ -225,6 +225,13 @@ namespace UserWebApp.Controllers
             var result = UserService.GetUserIdByName(@"DOMAIN\j.smith");
 
             return View(result);
+        }
+
+        public ActionResult Unknown()
+        {
+            var result = UserService.GetUserIdByName(@"DOMAIN\n.known");
+
+            return View("Index", result);
         }
 
         public ActionResult About()
